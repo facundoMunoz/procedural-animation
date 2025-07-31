@@ -1,13 +1,14 @@
 // Variables
 const SNAKE = [10, 30, 30, 25, 35, 35, 30, 30, 20, 10, 10];
-const VERTEBRA_DISTANCE = 30;
-const SPINE_SIZE = 25; // Min 2
+const VERTEBRA_DISTANCE = 40;
+const SPINE_SIZE = 15; // Min 3, must be odd (for now)
 const SPEED = 5;
 const EYES_SIZE = 10;
 const spine = new Array(SPINE_SIZE);
-const skin = new Array(SPINE_SIZE - 1);
 const svg = document.getElementById("svg");
 const eyes = new Array(2);
+
+const skin = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
 // Setup
 let mousePosition = {
@@ -28,14 +29,15 @@ function newSpine() {
         spine[vertebra].setAttribute('r', '40');
         spine[vertebra].style.cx = `${(VERTEBRA_DISTANCE * vertebra * -1) - VERTEBRA_DISTANCE}px`;
         spine[vertebra].style.cy = `${svg.clientHeight / 2}px`;
+        if (vertebra == 0 || vertebra == SPINE_SIZE - 1) {
+            spine[vertebra].style.fill = '#58804f';
+        }
         svg.appendChild(spine[vertebra]);
     }
-    // Append skin
-    for (let skinSegment = 0; skinSegment < SPINE_SIZE - 1; skinSegment++) {
-        skin[skinSegment] = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        skin[skinSegment].setAttribute('class', 'polygon');
-        svg.appendChild(skin[skinSegment]);
-    }
+    skin.setAttribute('stroke', '#58804f');
+    skin.setAttribute('stroke-width', '80');
+    skin.setAttribute('fill', 'none');
+    svg.appendChild(skin);
     // Append eyes
     for (let eye = 0; eye < eyes.length; eye++) {
         eyes[eye] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -103,27 +105,15 @@ function moveHeadTowardsMouse() {
 
             spine[vertebra].style.cx = `${targetX}px`;
             spine[vertebra].style.cy = `${targetY}px`;
-
-            // MOVE EYES WHEN NOT IN FIRST VERTEBRA
-            /*if (vertebra == 1) {
-                // Move eyes
-                let currentBorderDistance = spine[vertebra].getAttribute('r') - EYES_SIZE;
-                eyes[0].style.cx = `${currentX - ((targetYTemp / targetDistance) * currentBorderDistance)}px`;
-                eyes[0].style.cy = `${currentY + ((targetXTemp / targetDistance) * currentBorderDistance)}px`;
-                eyes[1].style.cx = `${currentX + ((targetYTemp / targetDistance) * currentBorderDistance)}px`;
-                eyes[1].style.cy = `${currentY - ((targetXTemp / targetDistance) * currentBorderDistance)}px`;
-            }*/
         }
-        // Update skin
-        let currentBorderDistance = spine[vertebra].getAttribute('r');
-        let currentLeft = `${currentX - ((targetYTemp / targetDistance) * currentBorderDistance)},${currentY + ((targetXTemp / targetDistance) * currentBorderDistance)}`;
-        let currentRight = `${currentX + ((targetYTemp / targetDistance) * currentBorderDistance)},${currentY - ((targetXTemp / targetDistance) * currentBorderDistance)}`;
-        let nextBorderDistance = spine[vertebra - 1].getAttribute('r');
-        let nextLeft = `${nextX - ((targetYTemp / targetDistance) * nextBorderDistance)},${nextY + ((targetXTemp / targetDistance) * nextBorderDistance)}`;
-        let nextRight = `${nextX + ((targetYTemp / targetDistance) * nextBorderDistance)},${nextY - ((targetXTemp / targetDistance) * nextBorderDistance)}`;
-
-        skin[vertebra - 1].setAttribute('points', `${currentLeft} ${nextLeft} ${nextRight} ${currentRight}`); // Top left, top right, bottom right, bottom left
     }
+
+    let pathData = `M${parseInt(spine[0].style.cx)},${parseInt(spine[0].style.cy)} S`;
+    for (let vertebra = 1; vertebra < SPINE_SIZE; vertebra++) {
+        pathData = `${pathData}${parseInt(spine[vertebra].style.cx)},${parseInt(spine[vertebra].style.cy)} `;
+    }
+    skin.setAttribute('d', pathData);
+
 }
 
 // Start
