@@ -1,0 +1,17 @@
+.svg {
+    width: 100vw;
+    height: 100vh;
+}
+
+.circle {
+    /*stroke: #ccc;*/
+    fill: #6CBB3C;
+    stroke-width: 5;
+}
+
+.eyes {
+    position: absolute;
+    fill: #444;
+    /* Top right, Bottom right, Bottom left, Top left */
+    /*clip-path: polygon(100px 0px, 100px 100px, 0px 100px, 0px 0px);*/
+}
