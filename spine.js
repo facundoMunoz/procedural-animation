@@ -7,7 +7,7 @@ const EYES_SIZE = 10;
 const spine = new Array(SPINE_SIZE);
 const svg = document.getElementById("svg");
 const eyes = new Array(2);
-
+const tongue = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 const skin = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
 // Setup
@@ -22,22 +22,35 @@ let headPosition = {
 
 // Create vertebrae
 function newSpine() {
+    // Append skin
+    skin.setAttribute('stroke', '#58804f');
+    skin.setAttribute('stroke-width', '80');
+    skin.setAttribute('fill', 'none');
+    svg.appendChild(skin);
     // Append spine
-    for (let vertebra = 0; vertebra < SPINE_SIZE; vertebra++) {
+    for (let vertebra = SPINE_SIZE - 1; vertebra >= 0; vertebra--) {
         spine[vertebra] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         spine[vertebra].setAttribute('class', 'circle');
         spine[vertebra].setAttribute('r', '40');
         spine[vertebra].style.cx = `${(VERTEBRA_DISTANCE * vertebra * -1) - VERTEBRA_DISTANCE}px`;
         spine[vertebra].style.cy = `${svg.clientHeight / 2}px`;
-        if (vertebra == 0 || vertebra == SPINE_SIZE - 1) {
-            spine[vertebra].style.fill = '#58804f';
-        }
         svg.appendChild(spine[vertebra]);
+        switch (vertebra) {
+            case (SPINE_SIZE - 1):
+                // Append tongue
+                tongue.setAttribute('class', 'tongue');
+                tongue.setAttribute('r', '10');
+                tongue.style.cx = '0px';
+                tongue.style.cy = `${svg.clientHeight / 2}px`;
+                svg.appendChild(tongue);
+            case 0:
+                console.log(vertebra);
+                spine[vertebra].style.fill = '#58804f';
+                break;
+            default:
+                break;
+        }
     }
-    skin.setAttribute('stroke', '#58804f');
-    skin.setAttribute('stroke-width', '80');
-    skin.setAttribute('fill', 'none');
-    svg.appendChild(skin);
     // Append eyes
     for (let eye = 0; eye < eyes.length; eye++) {
         eyes[eye] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -79,6 +92,10 @@ function moveHeadTowardsMouse() {
 
         spine[0].style.cx = `${headPosition.x}px`;
         spine[0].style.cy = `${headPosition.y}px`;
+
+        // Move tongue
+        tongue.style.cx = `${headPosition.x + ((dx / distance) * spine[0].getAttribute('r'))}px`;
+        tongue.style.cy = `${headPosition.y + ((dy / distance) * spine[0].getAttribute('r'))}px`;
 
         // Move eyes
         let eyesDistance = spine[0].getAttribute('r') - EYES_SIZE;

@@ -7,10 +7,13 @@
 .circle {
     /*fill: #58804f;*/
     fill: none;
-    stroke-width: 5;
 }
 
 .eyes {
     position: absolute;
     fill: #2f2f2f;
+}
+
+.tongue {
+    fill: #F8C5C8;
 }
