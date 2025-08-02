@@ -1,54 +1,72 @@
-// Variables
-const SNAKE = [10, 30, 30, 25, 35, 35, 30, 30, 20, 10, 10];
-const VERTEBRA_DISTANCE = 40;
-const SPINE_SIZE = 15; // Min 3, must be odd (for now)
-const SPEED = 5;
+// Constants
+const SPEED = 7;
 const EYES_SIZE = 10;
-const spine = new Array(SPINE_SIZE);
 const svg = document.getElementById("svg");
 const eyes = new Array(2);
+// Snake only
 const tongue = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 const skin = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+// Lizard only
+const feet = new Array(4);
+const legs = new Array(4);
+const FOOT_SIZE = 12;
+// Variables
+let vertebraDistance;
+let spineSize; // Min 3
+let spine;
+let mousePosition;
+let headPosition;
+let animationRequest;
+// Lizard only
+let skinSquare;
+let currentFeetPair = false;
+// Snake = 0, Lizard = 1
+let currentAnimal;
 
-// Setup
-let mousePosition = {
-    x: VERTEBRA_DISTANCE,
-    y: svg.clientHeight / 2
-};
-let headPosition = {
-    x: -VERTEBRA_DISTANCE,
-    y: svg.clientHeight / 2
-};
+// Setup initial positions
+function setupPositions() {
+    skinSquare = new Array(spineSize - 1);
+    svg.innerHTML = '';
+    mousePosition = {
+        x: vertebraDistance,
+        y: svg.clientHeight / 2
+    };
+    headPosition = {
+        x: -vertebraDistance,
+        y: svg.clientHeight / 2
+    };
+}
 
-// Create vertebrae
-function newSpine() {
+// Create snake
+function newSnake() {
+    // Set variables
+    currentAnimal = 0;
+    vertebraDistance = 20;
+    spineSize = 40;
+    spine = new Array(spineSize);
+    setupPositions();
     // Append skin
     skin.setAttribute('stroke', '#58804f');
     skin.setAttribute('stroke-width', '80');
     skin.setAttribute('fill', 'none');
+    skin.setAttribute('stroke-linecap', 'round');
     svg.appendChild(skin);
+    // Append tongue
+    tongue.setAttribute('class', 'tongue');
+    tongue.setAttribute('r', '10');
+    tongue.style.cx = '0px';
+    tongue.style.cy = `${svg.clientHeight / 2}px`;
+    svg.appendChild(tongue);
     // Append spine
-    for (let vertebra = SPINE_SIZE - 1; vertebra >= 0; vertebra--) {
+    for (let vertebra = spineSize - 1; vertebra >= 0; vertebra--) {
         spine[vertebra] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        spine[vertebra].setAttribute('class', 'circle');
-        spine[vertebra].setAttribute('r', '40');
-        spine[vertebra].style.cx = `${(VERTEBRA_DISTANCE * vertebra * -1) - VERTEBRA_DISTANCE}px`;
+        spine[vertebra].style.cx = `${(vertebraDistance * vertebra * -1) - vertebraDistance}px`;
         spine[vertebra].style.cy = `${svg.clientHeight / 2}px`;
-        svg.appendChild(spine[vertebra]);
-        switch (vertebra) {
-            case (SPINE_SIZE - 1):
-                // Append tongue
-                tongue.setAttribute('class', 'tongue');
-                tongue.setAttribute('r', '10');
-                tongue.style.cx = '0px';
-                tongue.style.cy = `${svg.clientHeight / 2}px`;
-                svg.appendChild(tongue);
-            case 0:
-                console.log(vertebra);
-                spine[vertebra].style.fill = '#58804f';
-                break;
-            default:
-                break;
+        if (vertebra == 0) {
+            spine[vertebra].setAttribute('class', 'circle');
+            spine[vertebra].setAttribute('r', '45');
+            spine[vertebra].style.fill = '#58804f';
+            svg.appendChild(spine[vertebra]);
         }
     }
     // Append eyes
@@ -60,6 +78,70 @@ function newSpine() {
         eyes[eye].style.cy = spine[0].style.cy;
         svg.appendChild(eyes[eye]);
     }
+    window.cancelAnimationFrame(animationRequest);
+    animate();
+}
+
+// Create lizard
+function newLizard() {
+    // Set variables
+    let body = new Array(40, 30, 40, 40, 40, 30, 25, 20, 15, 10, 5);
+    currentAnimal = 1;
+    vertebraDistance = 40;
+    spineSize = body.length;
+    spine = new Array(spineSize);
+    setupPositions();
+    // Append tongue
+    tongue.setAttribute('class', 'tongue');
+    tongue.setAttribute('r', '10');
+    tongue.style.cx = '0px';
+    tongue.style.cy = `${svg.clientHeight / 2}px`;
+    svg.appendChild(tongue);
+    // Append square skin
+    for (let skinSegment = 0; skinSegment < spineSize - 1; skinSegment++) {
+        skinSquare[skinSegment] = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        skinSquare[skinSegment].setAttribute('class', 'polygon');
+        svg.appendChild(skinSquare[skinSegment]);
+    }
+    // Append legs
+    for (let foot = 0; foot < feet.length; foot++) {
+        legs[foot] = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        legs[foot].setAttribute('stroke', '#58804f');
+        legs[foot].setAttribute('stroke-width', FOOT_SIZE * 2);
+        legs[foot].setAttribute('fill', 'none');
+        legs[foot].setAttribute('stroke-linecap', 'round');
+        svg.appendChild(legs[foot]);
+    }
+    // Append spine
+    for (let vertebra = spineSize - 1; vertebra >= 0; vertebra--) {
+        spine[vertebra] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        spine[vertebra].style.cx = `${(vertebraDistance * vertebra * -1) - vertebraDistance}px`;
+        spine[vertebra].style.cy = `${svg.clientHeight / 2}px`;
+        spine[vertebra].setAttribute('class', 'circle');
+        spine[vertebra].setAttribute('r', body[vertebra]);
+        // TODO : RECOVER spine[vertebra].style.fill = '#58804f';
+        svg.appendChild(spine[vertebra]);
+    }
+    // Append feet
+    for (let foot = 0; foot < feet.length; foot++) {
+        feet[foot] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        feet[foot].setAttribute('class', 'circle');
+        feet[foot].setAttribute('r', FOOT_SIZE);
+        feet[foot].style.cx = spine[0].style.cx;
+        feet[foot].style.cy = spine[0].style.cy;
+        svg.appendChild(feet[foot]);
+    }
+    // Append eyes
+    for (let eye = 0; eye < eyes.length; eye++) {
+        eyes[eye] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        eyes[eye].setAttribute('class', 'eyes');
+        eyes[eye].setAttribute('r', EYES_SIZE);
+        eyes[eye].style.cx = spine[0].style.cx;
+        eyes[eye].style.cy = spine[0].style.cy;
+        svg.appendChild(eyes[eye]);
+    }
+    window.cancelAnimationFrame(animationRequest);
+    animate();
 }
 
 // Mousemove event listener to get mouse position
@@ -73,7 +155,7 @@ document.addEventListener('mousemove', (event) => {
 // Continuous animation loop
 function animate() {
     moveHeadTowardsMouse();
-    requestAnimationFrame(animate);
+    animationRequest = window.requestAnimationFrame(animate);
 }
 
 function moveHeadTowardsMouse() {
@@ -106,7 +188,8 @@ function moveHeadTowardsMouse() {
     }
 
     // Move vertebrae
-    for (let vertebra = 1; vertebra < SPINE_SIZE; vertebra++) {
+    let currentFoot = feet.length - 1;
+    for (let vertebra = 1; vertebra < spineSize; vertebra++) {
         const currentX = parseInt(spine[vertebra].style.cx);
         const currentY = parseInt(spine[vertebra].style.cy);
         const nextX = parseInt(spine[vertebra - 1].style.cx);
@@ -116,23 +199,69 @@ function moveHeadTowardsMouse() {
         const targetYTemp = currentY - nextY;
         const targetDistance = Math.sqrt(targetXTemp * targetXTemp + targetYTemp * targetYTemp);
 
-        if (targetDistance > VERTEBRA_DISTANCE) {
-            const targetX = ((targetXTemp / targetDistance) * VERTEBRA_DISTANCE + nextX);
-            const targetY = ((targetYTemp / targetDistance) * VERTEBRA_DISTANCE + nextY);
+        const targetX = ((targetXTemp / targetDistance) * vertebraDistance + nextX);
+        const targetY = ((targetYTemp / targetDistance) * vertebraDistance + nextY);
 
+        if (targetDistance > vertebraDistance) {
             spine[vertebra].style.cx = `${targetX}px`;
             spine[vertebra].style.cy = `${targetY}px`;
         }
-    }
 
-    let pathData = `M${parseInt(spine[0].style.cx)},${parseInt(spine[0].style.cy)} S`;
-    for (let vertebra = 1; vertebra < SPINE_SIZE; vertebra++) {
-        pathData = `${pathData}${parseInt(spine[vertebra].style.cx)},${parseInt(spine[vertebra].style.cy)} `;
-    }
-    skin.setAttribute('d', pathData);
+        if (currentAnimal == 1) {
+            // Update skin
+            let currentBorderDistance = spine[vertebra].getAttribute('r');
+            let currentLeft = `${currentX - ((targetYTemp / targetDistance) * currentBorderDistance)},${currentY + ((targetXTemp / targetDistance) * currentBorderDistance)}`;
+            let currentRight = `${currentX + ((targetYTemp / targetDistance) * currentBorderDistance)},${currentY - ((targetXTemp / targetDistance) * currentBorderDistance)}`;
+            let nextBorderDistance = spine[vertebra - 1].getAttribute('r');
+            let nextLeft = `${nextX - ((targetYTemp / targetDistance) * nextBorderDistance)},${nextY + ((targetXTemp / targetDistance) * nextBorderDistance)}`;
+            let nextRight = `${nextX + ((targetYTemp / targetDistance) * nextBorderDistance)},${nextY - ((targetXTemp / targetDistance) * nextBorderDistance)}`;
+            skinSquare[vertebra - 1].setAttribute('points', `${currentLeft} ${nextLeft} ${nextRight} ${currentRight}`); // Top left, top right, bottom right, bottom left
 
+            let feetX, feetY, feetDistance, currentFeetX, currentFeetY;
+            if (vertebra == 2 || vertebra == 4) {
+                currentFeetX = parseInt(feet[currentFoot].style.cx);
+                currentFeetY = parseInt(feet[currentFoot].style.cy);
+                feetX = nextX - ((targetYTemp / targetDistance) * currentBorderDistance * 2);
+                feetY = nextY + ((targetXTemp / targetDistance) * currentBorderDistance * 2);
+                feetDistance = Math.sqrt((feetX - currentFeetX) * (feetX - currentFeetX) + (feetY - currentFeetY) * (feetY - currentFeetY));
+                if (!currentFeetPair) {
+                    // Move feet
+                    if (feetDistance > currentBorderDistance * 2) {
+                        feet[currentFoot].style.cx = `${feetX}px`;
+                        feet[currentFoot].style.cy = `${feetY}px`;
+                    }
+                    // Move leg
+                    let pathData = `M${currentX - ((targetYTemp / targetDistance) * currentBorderDistance)} ${currentY + ((targetXTemp / targetDistance) * currentBorderDistance)} L${parseInt(feet[currentFoot].style.cx)} ${parseInt(feet[currentFoot].style.cy)}`;
+                    legs[currentFoot].setAttribute('d', pathData);
+                }
+                currentFoot--;
+                currentFeetX = parseInt(feet[currentFoot].style.cx);
+                currentFeetY = parseInt(feet[currentFoot].style.cy);
+                feetX = nextX + ((targetYTemp / targetDistance) * currentBorderDistance * 2);
+                feetY = nextY - ((targetXTemp / targetDistance) * currentBorderDistance * 2);
+                feetDistance = Math.sqrt((feetX - currentFeetX) * (feetX - currentFeetX) + (feetY - currentFeetY) * (feetY - currentFeetY));
+                if (currentFeetPair) {
+                    // Move feet
+                    if (feetDistance > currentBorderDistance * 2) {
+                        feet[currentFoot].style.cx = `${feetX}px`;
+                        feet[currentFoot].style.cy = `${feetY}px`;
+                    }
+                    // Move leg
+                    pathData = `M${currentX + ((targetYTemp / targetDistance) * currentBorderDistance)} ${currentY - ((targetXTemp / targetDistance) * currentBorderDistance)} L${parseInt(feet[currentFoot].style.cx)} ${parseInt(feet[currentFoot].style.cy)}`;
+                    legs[currentFoot].setAttribute('d', pathData);
+                }
+                currentFoot--;
+
+            }
+        }
+    }
+    currentFeetPair = !currentFeetPair;
+
+    if (currentAnimal == 0) {
+        let pathData = `M${parseInt(spine[0].style.cx)},${parseInt(spine[0].style.cy)} S`;
+        for (let vertebra = 1; vertebra < spineSize; vertebra++) {
+            pathData = `${pathData}${parseInt(spine[vertebra].style.cx)},${parseInt(spine[vertebra].style.cy)} `;
+        }
+        skin.setAttribute('d', pathData);
+    }
 }
-
-// Start
-newSpine();
-animate();
