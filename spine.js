@@ -91,12 +91,6 @@ function newLizard() {
     spineSize = body.length;
     spine = new Array(spineSize);
     setupPositions();
-    // Append tongue
-    tongue.setAttribute('class', 'tongue');
-    tongue.setAttribute('r', '10');
-    tongue.style.cx = '0px';
-    tongue.style.cy = `${svg.clientHeight / 2}px`;
-    svg.appendChild(tongue);
     // Append square skin
     for (let skinSegment = 0; skinSegment < spineSize - 1; skinSegment++) {
         skinSquare[skinSegment] = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -112,6 +106,15 @@ function newLizard() {
         legs[foot].setAttribute('stroke-linecap', 'round');
         svg.appendChild(legs[foot]);
     }
+    // Append feet
+    for (let foot = 0; foot < feet.length; foot++) {
+        feet[foot] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        feet[foot].setAttribute('class', 'circle');
+        feet[foot].setAttribute('r', FOOT_SIZE);
+        feet[foot].style.cx = `${-vertebraDistance}px`;
+        feet[foot].style.cy = '0px';
+        svg.appendChild(feet[foot]);
+    }
     // Append spine
     for (let vertebra = spineSize - 1; vertebra >= 0; vertebra--) {
         spine[vertebra] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -119,17 +122,16 @@ function newLizard() {
         spine[vertebra].style.cy = `${svg.clientHeight / 2}px`;
         spine[vertebra].setAttribute('class', 'circle');
         spine[vertebra].setAttribute('r', body[vertebra]);
-        // TODO : RECOVER spine[vertebra].style.fill = '#58804f';
+        spine[vertebra].style.fill = '#58804f';
+        if (vertebra == 1) {
+            // Append tongue
+            tongue.setAttribute('class', 'tongue');
+            tongue.setAttribute('r', '10');
+            tongue.style.cx = '0px';
+            tongue.style.cy = `${svg.clientHeight / 2}px`;
+            svg.appendChild(tongue);
+        }
         svg.appendChild(spine[vertebra]);
-    }
-    // Append feet
-    for (let foot = 0; foot < feet.length; foot++) {
-        feet[foot] = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        feet[foot].setAttribute('class', 'circle');
-        feet[foot].setAttribute('r', FOOT_SIZE);
-        feet[foot].style.cx = spine[0].style.cx;
-        feet[foot].style.cy = spine[0].style.cy;
-        svg.appendChild(feet[foot]);
     }
     // Append eyes
     for (let eye = 0; eye < eyes.length; eye++) {
