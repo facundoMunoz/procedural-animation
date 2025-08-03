@@ -254,6 +254,7 @@ function moveHeadTowardsMouse() {
                 }
                 currentFoot--;
 
+                currentFeetPair = !currentFeetPair;
             }
         }
     }
